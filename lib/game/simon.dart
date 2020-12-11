@@ -1,36 +1,36 @@
 import 'dart:math';
 
-enum Color { RED, GREEN, BLUE, YELLOW }
+import 'package:flutter_simon/game/simon_state.dart';
 
 class Simon {
   Random _random;
-  List<Color> _colors = [];
-  int _nextColor = 0;
-  bool _shouldContinue = true;
-  bool _isWaitingForInput = false;
+  SimonState _simonState;
 
-  Simon(Random random) : _random = random;
+  Simon(Random random)
+      : _random = random,
+        _simonState =
+            SimonState(isWaitingForInput: false, shouldContinue: true, colorSuit: <Color>[], nextColorIndexInSuit: 0);
 
-  List<Color> saysColorSuitIs() {
-    if (_shouldContinue && !_isWaitingForInput) {
-      _colors.add(Color.values[_random.nextInt(4)]);
-      _nextColor = 0;
-      _isWaitingForInput = true;
+  SimonState get state => _simonState;
+
+  SimonState saysColorSuitIs() {
+    if (_simonState.shouldContinue && !_simonState.isWaitingForInput) {
+      _simonState = _simonState.copyWith(
+          colorSuit: [..._simonState.colorSuit, Color.values[_random.nextInt(4)]],
+          nextColorIndexInSuit: 0,
+          isWaitingForInput: true);
     }
-    return _colors;
+    return _simonState;
   }
 
-  bool nextColorInSuitIS(Color color) {
-    _shouldContinue = _nextColor < _colors.length && color == _colors[_nextColor++];
-    _isWaitingForInput = _nextColor < _colors.length;
-    return _shouldContinue;
-  }
-
-  bool isReady() {
-    return _shouldContinue;
-  }
-
-  bool isWaitingForNextColor() {
-    return _isWaitingForInput;
+  SimonState nextColorInSuitIS(Color color) {
+    bool shouldContinue = _simonState.nextColorIndexInSuit < _simonState.colorSuit.length &&
+        color == _simonState.colorSuit[_simonState.nextColorIndexInSuit];
+    bool waitForInput = (_simonState.nextColorIndexInSuit + 1) < _simonState.colorSuit.length;
+    _simonState = _simonState.copyWith(
+        shouldContinue: shouldContinue,
+        isWaitingForInput: waitForInput,
+        nextColorIndexInSuit: _simonState.nextColorIndexInSuit + 1);
+    return _simonState;
   }
 }
