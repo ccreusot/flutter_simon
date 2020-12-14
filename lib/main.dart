@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_simon/game/simon.dart';
 
 void main() {
@@ -54,21 +55,91 @@ class _SimonGameState extends State<SimonGame> {
       body: SafeArea(
         child: Container(
           constraints: BoxConstraints.expand(),
-          color: Colors.blue,
+          color: Colors.white,
           child: Column(
             children: [
               Text(
                 "Simon Says !",
-                style: Theme.of(context).textTheme.headline1.copyWith(color: Colors.white),
+                style: Theme.of(context).textTheme.headline1.copyWith(color: Colors.black),
               ),
-              MaterialButton(
-                child: Text("Start"),
-                onPressed: () {},
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.none,
+                  alignment: Alignment.center,
+                  child: Stack(alignment: Alignment.center, children: [
+                    Container(
+                      width: 288,
+                      child: ClipOval(
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                SimonButton(
+                                  onTap: () {},
+                                  color: Colors.red[400],
+                                  pressedColor: Colors.red[800],
+                                ),
+                                SimonButton(
+                                  onTap: () {},
+                                  color: Colors.green[400],
+                                  pressedColor: Colors.green[800],
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                SimonButton(onTap: () {}, color: Colors.blue[400], pressedColor: Colors.blue[800]),
+                                SimonButton(
+                                  onTap: () {},
+                                  color: Colors.yellow[400],
+                                  pressedColor: Colors.yellow[800],
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    ClipOval(
+                      child: Container(
+                        width: 128,
+                        height: 128,
+                        color: Colors.black,
+                      ),
+                    )
+                  ]),
+                ),
               )
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+class SimonButton extends StatelessWidget {
+  final Color color;
+  final Color pressedColor;
+  final void Function() onTap;
+
+  SimonButton({@required this.onTap, @required this.color, @required this.pressedColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+        width: 144,
+        height: 144,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.linear,
+        child: Material(
+            color: this.color,
+            child: InkWell(
+              splashColor: this.pressedColor,
+              focusColor: this.pressedColor,
+              highlightColor: this.pressedColor,
+              hoverColor: this.pressedColor,
+              onTap: this.onTap,
+            )));
   }
 }
