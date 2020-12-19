@@ -28,29 +28,32 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
     _message = "Ready";
     _elapsedTimeObserver.start();
     _gameLoopTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
-      // if (_simon.state.shouldContinue) {
-      //   if (_simon.state.colorSuit.isEmpty && _startingCountDown >= 0) {
-      //     if (_elapsedTimeObserver.elapsed.inSeconds >= 1) {
-      //       setState(() {
-      //         if (_startingCountDown == 0) {
-      //           _message = "";
-      //         } else {
-      //           _message = "$_startingCountDown";
-      //         }
-      //         _startingCountDown--;
-      //       });
-      //       _elapsedTimeObserver.reset();
-      //     }
-      //   } else {
-      //     if (!_simon.state.isWaitingForInput) {
-      //       print("next Suit !");
-      //       setState(() {
-      //         _simon.saysColorSuitIs();
-      //         _isPlayingColorSuit = true;
-      //       });
-      //     } else {}
-      //   }
-      // }
+      _simon.state.when(
+          start: () {
+            if (_elapsedTimeObserver.elapsedMilliseconds >= 500) {
+              if (_startingCountDown >= 0) {
+                setState(() {
+                  _message = "$_startingCountDown";
+                  _startingCountDown--;
+                });
+                _elapsedTimeObserver.reset();
+              } else {
+                setState(() {
+                  _message = "";
+                  _simon.saysColorSuitIs();
+                  _isPlayingColorSuit = true;
+                });
+              }
+            }
+          },
+          waitForInput: (int score, List<state.Color> colorSuit, int nextIndex) {},
+          sayNextColorIs: (int score, List<state.Color> colorSuit) {
+            setState(() {
+              _simon.saysColorSuitIs();
+              _isPlayingColorSuit = true;
+            });
+          },
+          end: (int score) {});
     });
   }
 
@@ -78,11 +81,14 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                   },
                 )
               : SimonColorSuitPlayer(
-                  colorSuit: [],
+                  colorSuit: _simon.state.when(
+                      start: () => [],
+                      waitForInput: (int score, List<state.Color> colorSuit, int nextIndex) => colorSuit,
+                      sayNextColorIs: (int score, List<state.Color> colorSuit) => colorSuit,
+                      end: (int score) => []),
                   onEnded: () {
                     setState(() {
                       _isPlayingColorSuit = false;
-                      _startingCountDown = 6;
                     });
                   },
                 ),
