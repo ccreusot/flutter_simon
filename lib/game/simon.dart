@@ -8,29 +8,48 @@ class Simon {
 
   Simon(Random random)
       : _random = random,
-        _simonState =
-            SimonState(isWaitingForInput: false, shouldContinue: true, colorSuit: <Color>[], nextColorIndexInSuit: 0);
+        _simonState = SimonState.start();
 
   SimonState get state => _simonState;
 
   SimonState saysColorSuitIs() {
-    if (_simonState.shouldContinue && !_simonState.isWaitingForInput) {
-      _simonState = _simonState.copyWith(
-          colorSuit: [..._simonState.colorSuit, Color.values[_random.nextInt(4)]],
-          nextColorIndexInSuit: 0,
-          isWaitingForInput: true);
-    }
+    _simonState = _simonState.when(
+        start: () {
+          return SimonState.waitForInput(0, [Color.values[_random.nextInt(4)]], 0);
+        },
+        waitForInput: (int score, List<Color> colorSuit, int nextColorIndexInSuit) {
+          return SimonState.waitForInput(score, colorSuit, 0);
+        },
+        sayNextColorIs: (int score, List<Color> colorSuit) {
+          return SimonState.waitForInput(score + 1, [...colorSuit, Color.values[_random.nextInt(4)]], 0);
+        },
+        end: (int score) => SimonState.end(score));
     return _simonState;
   }
 
   SimonState nextColorInSuitIS(Color color) {
-    bool shouldContinue = _simonState.nextColorIndexInSuit < _simonState.colorSuit.length &&
-        color == _simonState.colorSuit[_simonState.nextColorIndexInSuit];
-    bool waitForInput = (_simonState.nextColorIndexInSuit + 1) < _simonState.colorSuit.length;
-    _simonState = _simonState.copyWith(
-        shouldContinue: shouldContinue,
-        isWaitingForInput: waitForInput,
-        nextColorIndexInSuit: _simonState.nextColorIndexInSuit + 1);
+    _simonState = _simonState.when(
+        start: () => _simonState,
+        waitForInput: (int score, List<Color> colorSuit, int nextColorIndexInSuit) {
+          if (nextColorIndexInSuit < colorSuit.length && color == colorSuit[nextColorIndexInSuit]) {
+            if (nextColorIndexInSuit + 1 < colorSuit.length) {
+              return SimonState.waitForInput(score, colorSuit, nextColorIndexInSuit + 1);
+            } else {
+              return SimonState.sayNextColorIs(score, colorSuit);
+            }
+          } else {
+            return SimonState.end(score);
+          }
+        },
+        sayNextColorIs: (int score, List<Color> colorSuit) => SimonState.end(score),
+        end: (int score) => SimonState.end(score));
+    // bool shouldContinue = _simonState.nextColorIndexInSuit < _simonState.colorSuit.length &&
+    //     color == _simonState.colorSuit[_simonState.nextColorIndexInSuit];
+    // bool waitForInput = (_simonState.nextColorIndexInSuit + 1) < _simonState.colorSuit.length;
+    // _simonState = _simonState.copyWith(
+    //     shouldContinue: shouldContinue,
+    //     isWaitingForInput: waitForInput,
+    //     nextColorIndexInSuit: _simonState.nextColorIndexInSuit + 1);
     return _simonState;
   }
 }

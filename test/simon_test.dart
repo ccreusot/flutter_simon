@@ -27,12 +27,12 @@ void main() {
   test('When we start Simon it should be ready to play', () {
     var simon = Simon(DeterminedRandom());
 
-    expect(simon.state.shouldContinue, equals(true));
+    expect(simon.state, equals(SimonState.start()));
   });
   test('Simon says color is red', () {
     var simon = Simon(DeterminedRandom());
 
-    SimonState state = simon.saysColorSuitIs();
+    WaitForInput state = simon.saysColorSuitIs();
 
     expect(state.colorSuit, equals([Color.RED]));
   });
@@ -41,9 +41,9 @@ void main() {
     var simon = Simon(DeterminedRandom());
 
     simon.saysColorSuitIs();
-    SimonState state = simon.nextColorInSuitIS(Color.GREEN);
+    End state = simon.nextColorInSuitIS(Color.GREEN);
 
-    expect(state.shouldContinue, equals(false));
+    expect(state, equals(SimonState.end(0)));
   });
 
   test('Simon should not says the next color in the suit if one of the color repeated is false', () {
@@ -53,10 +53,9 @@ void main() {
     simon.nextColorInSuitIS(Color.RED);
     simon.saysColorSuitIs();
     simon.nextColorInSuitIS(Color.BLUE);
-    SimonState state = simon.saysColorSuitIs();
+    End state = simon.saysColorSuitIs();
 
-    expect(state.colorSuit, equals([Color.RED, Color.GREEN]));
-    expect(state.shouldContinue, equals(false));
+    expect(state, equals(SimonState.end(1)));
   });
 
   test('Simon is waiting for exactly the number of element it give, if you give one more, the game is ended.', () {
@@ -67,20 +66,18 @@ void main() {
     simon.saysColorSuitIs();
     simon.nextColorInSuitIS(Color.RED);
     simon.nextColorInSuitIS(Color.GREEN);
-    SimonState state = simon.nextColorInSuitIS(Color.GREEN);
+    End state = simon.nextColorInSuitIS(Color.GREEN);
 
-    expect(state.shouldContinue, equals(false));
-    expect(state.colorSuit, equals([Color.RED, Color.GREEN]));
+    expect(state, equals(SimonState.end(1)));
   });
 
   test('Simon should return the same color suit if it is waiting for input', () {
     var simon = Simon(DeterminedRandom());
 
     simon.saysColorSuitIs();
-    SimonState state = simon.saysColorSuitIs();
+    WaitForInput state = simon.saysColorSuitIs();
 
-    expect(state.colorSuit, equals([Color.RED]));
-    expect(state.isWaitingForInput, equals(true));
+    expect(state, equals(SimonState.waitForInput(0, [Color.RED], 0)));
   });
 
   test(
@@ -92,10 +89,8 @@ void main() {
     simon.nextColorInSuitIS(Color.RED);
     simon.saysColorSuitIs();
     simon.nextColorInSuitIS(Color.RED);
-    SimonState state = simon.nextColorInSuitIS(Color.GREEN);
+    SayNextColorIs state = simon.nextColorInSuitIS(Color.GREEN);
 
-    expect(state.shouldContinue, equals(true));
-    expect(state.isWaitingForInput, equals(false));
-    expect(state.colorSuit, equals([Color.RED, Color.GREEN]));
+    expect(state, SimonState.sayNextColorIs(1, [Color.RED, Color.GREEN]));
   });
 }

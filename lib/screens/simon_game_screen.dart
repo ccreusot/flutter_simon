@@ -28,33 +28,29 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
     _message = "Ready";
     _elapsedTimeObserver.start();
     _gameLoopTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
-      if (_simon.state.shouldContinue) {
-        if (_simon.state.colorSuit.isEmpty && _startingCountDown >= 0) {
-          if (_elapsedTimeObserver.elapsed.inSeconds >= 1) {
-            setState(() {
-              if (_startingCountDown == 0) {
-                _message = "";
-              } else {
-                _message = "$_startingCountDown";
-              }
-              _startingCountDown--;
-            });
-            _elapsedTimeObserver.reset();
-          }
-        } else {
-          if (!_simon.state.isWaitingForInput && _startingCountDown <= 0) {
-            print("next Suit !");
-            setState(() {
-              _simon.saysColorSuitIs();
-              _isPlayingColorSuit = true;
-            });
-          } else {
-            setState(() {
-              _startingCountDown--;
-            });
-          }
-        }
-      }
+      // if (_simon.state.shouldContinue) {
+      //   if (_simon.state.colorSuit.isEmpty && _startingCountDown >= 0) {
+      //     if (_elapsedTimeObserver.elapsed.inSeconds >= 1) {
+      //       setState(() {
+      //         if (_startingCountDown == 0) {
+      //           _message = "";
+      //         } else {
+      //           _message = "$_startingCountDown";
+      //         }
+      //         _startingCountDown--;
+      //       });
+      //       _elapsedTimeObserver.reset();
+      //     }
+      //   } else {
+      //     if (!_simon.state.isWaitingForInput) {
+      //       print("next Suit !");
+      //       setState(() {
+      //         _simon.saysColorSuitIs();
+      //         _isPlayingColorSuit = true;
+      //       });
+      //     } else {}
+      //   }
+      // }
     });
   }
 
@@ -82,7 +78,7 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                   },
                 )
               : SimonColorSuitPlayer(
-                  colorSuit: _simon.state.colorSuit,
+                  colorSuit: [],
                   onEnded: () {
                     setState(() {
                       _isPlayingColorSuit = false;
@@ -268,9 +264,7 @@ class NoBoundSimonButton extends StatelessWidget {
             color: this.color,
             child: InkWell(
               splashColor: this.pressedColor,
-              focusColor: this.pressedColor,
               highlightColor: this.pressedColor,
-              hoverColor: this.pressedColor,
               onTap: this.onTap,
             )));
   }
