@@ -52,4 +52,13 @@ class Simon {
     //     nextColorIndexInSuit: _simonState.nextColorIndexInSuit + 1);
     return _simonState;
   }
+
+  SimonState endGame() {
+    _simonState = _simonState.when(
+        start: () => SimonState.end(0),
+        waitForInput: (int score, List<Color> colorSuit, int nextIndex) => SimonState.end(score),
+        sayNextColorIs: (int score, List<Color> colorSuit) => SimonState.end(score),
+        end: (int score) => _simonState);
+    return _simonState;
+  }
 }

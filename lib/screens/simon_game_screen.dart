@@ -4,6 +4,7 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_simon/game/simon.dart';
 import 'package:flutter_simon/game/simon_state.dart' as state;
+import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class SimonGameScreen extends StatefulWidget {
   @override
@@ -16,6 +17,8 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
   String _message;
   bool _isPlayingColorSuit;
   Timer _endGame;
+  Timer _tapTimer;
+  double _timer = 100;
 
   @override
   void initState() {
@@ -49,6 +52,12 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
   @override
   void dispose() {
     _gameLoopTimer.cancel();
+    if (_endGame != null) {
+      _endGame.cancel();
+    }
+    if (_tapTimer != null) {
+      _tapTimer.cancel();
+    }
     super.dispose();
   }
 
@@ -77,8 +86,29 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
 
   void endGame() {
     if (_endGame != null) return;
+    if (_tapTimer != null) {
+      _tapTimer.cancel();
+    }
     _endGame = Timer(Duration(seconds: 2), () {
       Navigator.pop(context);
+    });
+  }
+
+  void startTapTimer() {
+    if (_tapTimer != null) _tapTimer.cancel();
+    setState(() {
+      _timer = 1;
+      _tapTimer = Timer.periodic(Duration(milliseconds: 5), (timer) {
+        if (_timer <= 0.001) {
+          print("END GAME");
+          _tapTimer.cancel();
+          _simon.endGame();
+          return;
+        }
+        setState(() {
+          _timer -= 0.001;
+        });
+      });
     });
   }
 
@@ -92,9 +122,23 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
           child: (!_isPlayingColorSuit)
               ? SimonGamePad(
                   message: _message,
+                  time: _timer,
                   onTap: (selectedColor) {
                     setState(() {
                       _simon.nextColorInSuitIS(selectedColor);
+                      _simon.state.when(start: () {
+                        return;
+                      }, waitForInput: (int score, List<state.Color> colorSuit, int nextIndex) {
+                        startTapTimer();
+                        return;
+                      }, sayNextColorIs: (int score, List<state.Color> colorSuit) {
+                        _message = "Simon Says";
+                        _tapTimer.cancel();
+                        return;
+                      }, end: (int score) {
+                        _tapTimer.cancel();
+                        return;
+                      });
                     });
                   },
                 )
@@ -106,7 +150,9 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                       end: (int score) => []),
                   onEnded: () {
                     setState(() {
+                      _message = "";
                       _isPlayingColorSuit = false;
+                      startTapTimer();
                     });
                   },
                 ),
@@ -118,9 +164,10 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
 
 class SimonGamePad extends StatelessWidget {
   final String message;
+  final double time;
   final void Function(state.Color selectedColor) onTap;
 
-  const SimonGamePad({Key key, this.message, this.onTap}) : super(key: key);
+  const SimonGamePad({Key key, this.message, this.time, this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +222,29 @@ class SimonGamePad extends StatelessWidget {
         Text(
           message,
           style: Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.white),
-        )
+        ),
+        if (message.isEmpty)
+          SleekCircularSlider(
+            min: 0,
+            max: 1,
+            initialValue: this.time,
+            innerWidget: (value) {
+              return Container();
+            },
+            appearance: CircularSliderAppearance(
+              animationEnabled: false,
+              infoProperties: InfoProperties(),
+              customWidths: CustomSliderWidths(
+                progressBarWidth: 4.0,
+                trackWidth: 4.0,
+              ),
+              customColors: CustomSliderColors(
+                dynamicGradient: false,
+                progressBarColor: Colors.white,
+                trackColor: Colors.transparent,
+              ),
+            ),
+          )
       ],
     );
   }
@@ -202,6 +271,10 @@ class _SimonColorSuitPlayerState extends State<SimonColorSuitPlayer> {
     super.initState();
     print("Start Playing suit ${widget._colorSuit}");
     _nextColorIndex = 0;
+    if (widget._colorSuit.isEmpty) {
+      widget.onEnded();
+      return;
+    }
     _playerTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
       if (_nextColorIndex < widget._colorSuit.length - 1) {
         setState(() {

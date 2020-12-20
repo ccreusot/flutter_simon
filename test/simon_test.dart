@@ -93,4 +93,12 @@ void main() {
 
     expect(state, SimonState.sayNextColorIs(1, [Color.RED, Color.GREEN]));
   });
+
+  test('When we ask Simon to end the game it should go directly end it', () {
+    var simon = Simon(DeterminedRandom());
+
+    End state = simon.endGame();
+
+    expect(state, SimonState.end(0));
+  });
 }
