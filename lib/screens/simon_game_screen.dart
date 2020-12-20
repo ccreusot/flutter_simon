@@ -14,54 +14,72 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
   Simon _simon;
   Timer _gameLoopTimer;
   String _message;
-  int _startingCountDown;
-  Stopwatch _elapsedTimeObserver;
   bool _isPlayingColorSuit;
+  Timer _endGame;
 
   @override
   void initState() {
     super.initState();
     _simon = Simon(Random());
-    _startingCountDown = 3;
-    _elapsedTimeObserver = Stopwatch();
     _isPlayingColorSuit = false;
     _message = "Ready";
-    _elapsedTimeObserver.start();
+
+    startGame();
     _gameLoopTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
       _simon.state.when(
-          start: () {
-            if (_elapsedTimeObserver.elapsedMilliseconds >= 500) {
-              if (_startingCountDown >= 0) {
-                setState(() {
-                  _message = "$_startingCountDown";
-                  _startingCountDown--;
-                });
-                _elapsedTimeObserver.reset();
-              } else {
-                setState(() {
-                  _message = "";
-                  _simon.saysColorSuitIs();
-                  _isPlayingColorSuit = true;
-                });
-              }
-            }
-          },
+          start: () {/* do nothing */},
           waitForInput: (int score, List<state.Color> colorSuit, int nextIndex) {},
           sayNextColorIs: (int score, List<state.Color> colorSuit) {
-            setState(() {
-              _simon.saysColorSuitIs();
-              _isPlayingColorSuit = true;
+            Timer(Duration(milliseconds: 500), () {
+              setState(() {
+                _simon.saysColorSuitIs();
+                _isPlayingColorSuit = true;
+              });
             });
           },
-          end: (int score) {});
+          end: (int score) {
+            setState(() {
+              _message = "Game Over\nScore: $score";
+            });
+            endGame();
+          });
     });
   }
 
   @override
   void dispose() {
     _gameLoopTimer.cancel();
-    _elapsedTimeObserver.stop();
     super.dispose();
+  }
+
+  void startGame() {
+    Timer(Duration(seconds: 2), () {
+      if (_simon.state is state.Start) {
+        setState(() {
+          _message = "Simon Says";
+        });
+        startSimon();
+      }
+    });
+  }
+
+  void startSimon() {
+    Timer(Duration(seconds: 1), () {
+      if (_simon.state is state.Start) {
+        setState(() {
+          _message = "";
+          _simon.saysColorSuitIs();
+          _isPlayingColorSuit = true;
+        });
+      }
+    });
+  }
+
+  void endGame() {
+    if (_endGame != null) return;
+    _endGame = Timer(Duration(seconds: 2), () {
+      Navigator.pop(context);
+    });
   }
 
   @override
