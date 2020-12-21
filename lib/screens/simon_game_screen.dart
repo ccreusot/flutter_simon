@@ -1,12 +1,21 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:core';
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_simon/game/simon.dart';
 import 'package:flutter_simon/game/simon_state.dart' as state;
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class SimonGameScreen extends StatefulWidget {
+  final player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+  AudioCache soundpool;
+
+  SimonGameScreen({Key key}) : super(key: key) {
+    soundpool = AudioCache(fixedPlayer: player);
+  }
+
   @override
   _SimonGameScreenState createState() => _SimonGameScreenState();
 }
@@ -18,7 +27,12 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
   bool _isPlayingColorSuit;
   Timer _endGame;
   Timer _tapTimer;
-  double _timer = 100;
+  double _timer = 1;
+
+  String buttonSoundRed = 'button-red.m4a';
+  String buttonSoundGreen = 'button-green.m4a';
+  String buttonSoundYellow = 'button-yellow.m4a';
+  String buttonSoundBlue = 'button-blue.m4a';
 
   @override
   void initState() {
@@ -27,6 +41,31 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
     _isPlayingColorSuit = false;
     _message = "Ready";
 
+    widget.soundpool.loadAll([
+      'button-red.m4a',
+      'button-green.m4a',
+      'button-blue.m4a',
+      'button-yellow.m4a',
+    ]).then((value) {
+      initLoopGame();
+    });
+  }
+
+  @override
+  void dispose() {
+    _gameLoopTimer.cancel();
+    if (_endGame != null) {
+      _endGame.cancel();
+    }
+    if (_tapTimer != null) {
+      _tapTimer.cancel();
+    }
+    widget.player.dispose();
+    widget.soundpool.clearCache();
+    super.dispose();
+  }
+
+  void initLoopGame() {
     startGame();
     _gameLoopTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
       _simon.state.when(
@@ -47,18 +86,6 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
             endGame();
           });
     });
-  }
-
-  @override
-  void dispose() {
-    _gameLoopTimer.cancel();
-    if (_endGame != null) {
-      _endGame.cancel();
-    }
-    if (_tapTimer != null) {
-      _tapTimer.cancel();
-    }
-    super.dispose();
   }
 
   void startGame() {
@@ -100,7 +127,6 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
       _timer = 1;
       _tapTimer = Timer.periodic(Duration(milliseconds: 5), (timer) {
         if (_timer <= 0.001) {
-          print("END GAME");
           _tapTimer.cancel();
           _simon.endGame();
           return;
@@ -123,7 +149,21 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
               ? SimonGamePad(
                   message: _message,
                   time: _timer,
-                  onTap: (selectedColor) {
+                  onTap: (selectedColor) async {
+                    switch (selectedColor) {
+                      case state.Color.RED:
+                        await widget.soundpool.play(buttonSoundRed);
+                        break;
+                      case state.Color.GREEN:
+                        await widget.soundpool.play(buttonSoundGreen);
+                        break;
+                      case state.Color.BLUE:
+                        await widget.soundpool.play(buttonSoundBlue);
+                        break;
+                      case state.Color.YELLOW:
+                        await widget.soundpool.play(buttonSoundYellow);
+                        break;
+                    }
                     setState(() {
                       _simon.nextColorInSuitIS(selectedColor);
                       _simon.state.when(start: () {
@@ -148,6 +188,22 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                       waitForInput: (int score, List<state.Color> colorSuit, int nextIndex) => colorSuit,
                       sayNextColorIs: (int score, List<state.Color> colorSuit) => colorSuit,
                       end: (int score) => []),
+                  onPlayedColor: (state.Color playedColor) async {
+                    switch (playedColor) {
+                      case state.Color.RED:
+                        await widget.soundpool.play(buttonSoundRed);
+                        break;
+                      case state.Color.GREEN:
+                        await widget.soundpool.play(buttonSoundGreen);
+                        break;
+                      case state.Color.BLUE:
+                        await widget.soundpool.play(buttonSoundBlue);
+                        break;
+                      case state.Color.YELLOW:
+                        await widget.soundpool.play(buttonSoundYellow);
+                        break;
+                    }
+                  },
                   onEnded: () {
                     setState(() {
                       _message = "";
@@ -167,7 +223,7 @@ class SimonGamePad extends StatelessWidget {
   final double time;
   final void Function(state.Color selectedColor) onTap;
 
-  const SimonGamePad({Key key, this.message, this.time, this.onTap}) : super(key: key);
+  SimonGamePad({Key key, this.message, this.time, this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -183,14 +239,18 @@ class SimonGamePad extends StatelessWidget {
                     child: NoBoundSimonButton(
                       color: Colors.red[400],
                       pressedColor: Colors.red[800],
-                      onTap: () => onTap(state.Color.RED),
+                      onTap: () async {
+                        onTap(state.Color.RED);
+                      },
                     ),
                   ),
                   Expanded(
                     child: NoBoundSimonButton(
                       color: Colors.green[400],
                       pressedColor: Colors.green[800],
-                      onTap: () => onTap(state.Color.GREEN),
+                      onTap: () async {
+                        onTap(state.Color.GREEN);
+                      },
                     ),
                   ),
                 ],
@@ -203,14 +263,18 @@ class SimonGamePad extends StatelessWidget {
                     child: NoBoundSimonButton(
                       color: Colors.blue[400],
                       pressedColor: Colors.blue[800],
-                      onTap: () => onTap(state.Color.BLUE),
+                      onTap: () async {
+                        onTap(state.Color.BLUE);
+                      },
                     ),
                   ),
                   Expanded(
                     child: NoBoundSimonButton(
                       color: Colors.yellow[400],
                       pressedColor: Colors.yellow[800],
-                      onTap: () => onTap(state.Color.YELLOW),
+                      onTap: () async {
+                        onTap(state.Color.YELLOW);
+                      },
                     ),
                   ),
                 ],
@@ -252,9 +316,10 @@ class SimonGamePad extends StatelessWidget {
 
 class SimonColorSuitPlayer extends StatefulWidget {
   final List<state.Color> _colorSuit;
+  final void Function(state.Color playedColor) onPlayedColor;
   final void Function() onEnded;
 
-  const SimonColorSuitPlayer({Key key, List<state.Color> colorSuit, this.onEnded})
+  const SimonColorSuitPlayer({Key key, List<state.Color> colorSuit, this.onPlayedColor, this.onEnded})
       : _colorSuit = colorSuit,
         super(key: key);
 
@@ -269,19 +334,17 @@ class _SimonColorSuitPlayerState extends State<SimonColorSuitPlayer> {
   @override
   void initState() {
     super.initState();
-    print("Start Playing suit ${widget._colorSuit}");
     _nextColorIndex = 0;
     if (widget._colorSuit.isEmpty) {
       widget.onEnded();
       return;
     }
-    _playerTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
+    _playerTimer = Timer.periodic(Duration(milliseconds: 250), (timer) {
       if (_nextColorIndex < widget._colorSuit.length - 1) {
         setState(() {
           _nextColorIndex += 0.5;
         });
       } else {
-        print("onEnd player");
         widget.onEnded();
       }
     });
@@ -297,6 +360,7 @@ class _SimonColorSuitPlayerState extends State<SimonColorSuitPlayer> {
   Widget build(BuildContext context) {
     state.Color highlightColor =
         (_nextColorIndex - _nextColorIndex.floor() == 0.5) ? null : widget._colorSuit[_nextColorIndex.floor()];
+    widget.onPlayedColor(highlightColor);
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -362,6 +426,7 @@ class NoBoundSimonButton extends StatelessWidget {
             child: InkWell(
               splashColor: this.pressedColor,
               highlightColor: this.pressedColor,
+              enableFeedback: false,
               onTap: this.onTap,
             )));
   }

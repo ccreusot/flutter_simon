@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   freezed_annotation: ^0.12.0
   sleek_circular_slider: ^1.2.0+web
+  audioplayers: ^0.17.0
 
   cupertino_icons: ^1.0.0
 
@@ -26,6 +27,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets:
+    - assets/button-red.m4a
+    - assets/button-green.m4a
+    - assets/button-yellow.m4a
+    - assets/button-blue.m4a
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
