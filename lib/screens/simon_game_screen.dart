@@ -9,11 +9,11 @@ import 'package:flutter_simon/game/simon_state.dart' as state;
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 
 class SimonGameScreen extends StatefulWidget {
-  final player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+  // final player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
   AudioCache soundpool;
 
   SimonGameScreen({Key key}) : super(key: key) {
-    soundpool = AudioCache(fixedPlayer: player);
+    soundpool = AudioCache();
   }
 
   @override
@@ -60,7 +60,6 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
     if (_tapTimer != null) {
       _tapTimer.cancel();
     }
-    widget.player.dispose();
     widget.soundpool.clearCache();
     super.dispose();
   }
@@ -152,16 +151,16 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                   onTap: (selectedColor) async {
                     switch (selectedColor) {
                       case state.Color.RED:
-                        await widget.soundpool.play(buttonSoundRed);
+                        await widget.soundpool.play(buttonSoundRed, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.GREEN:
-                        await widget.soundpool.play(buttonSoundGreen);
+                        await widget.soundpool.play(buttonSoundGreen, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.BLUE:
-                        await widget.soundpool.play(buttonSoundBlue);
+                        await widget.soundpool.play(buttonSoundBlue, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.YELLOW:
-                        await widget.soundpool.play(buttonSoundYellow);
+                        await widget.soundpool.play(buttonSoundYellow, mode: PlayerMode.LOW_LATENCY);
                         break;
                     }
                     setState(() {
@@ -191,16 +190,16 @@ class _SimonGameScreenState extends State<SimonGameScreen> {
                   onPlayedColor: (state.Color playedColor) async {
                     switch (playedColor) {
                       case state.Color.RED:
-                        await widget.soundpool.play(buttonSoundRed);
+                        await widget.soundpool.play(buttonSoundRed, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.GREEN:
-                        await widget.soundpool.play(buttonSoundGreen);
+                        await widget.soundpool.play(buttonSoundGreen, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.BLUE:
-                        await widget.soundpool.play(buttonSoundBlue);
+                        await widget.soundpool.play(buttonSoundBlue, mode: PlayerMode.LOW_LATENCY);
                         break;
                       case state.Color.YELLOW:
-                        await widget.soundpool.play(buttonSoundYellow);
+                        await widget.soundpool.play(buttonSoundYellow, mode: PlayerMode.LOW_LATENCY);
                         break;
                     }
                   },
